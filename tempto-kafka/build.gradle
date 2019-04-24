@@ -19,7 +19,15 @@ dependencies {
     compile libraries.kafka
     compile libraries.zkclient
 }
+apply plugin: 'maven-publish'
 
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+}
 // project information
 ext.artifactId = 'tempto-kafka'
 archivesBaseName = artifactId

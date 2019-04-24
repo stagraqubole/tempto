@@ -19,7 +19,15 @@ plugins {
 
 apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'java'
+apply plugin: 'maven-publish'
 
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+}
 dependencies {
     compile tempto_runner
     compile tempto_kafka
@@ -40,6 +48,7 @@ jar {
 }
 
 shadowJar {
+    zip64 true
     version = ''
 }
 

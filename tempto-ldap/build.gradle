@@ -17,7 +17,15 @@ apply plugin: 'java'
 dependencies {
     compile tempto_core
 }
+apply plugin: 'maven-publish'
 
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+}
 // project information
 ext.artifactId = 'tempto-ldap'
 archivesBaseName = artifactId

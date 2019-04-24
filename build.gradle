@@ -20,6 +20,17 @@ apply plugin: 'idea'
 apply plugin: 'java'
 apply plugin: 'groovy'
 
+
+apply plugin: 'maven-publish'
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+}
+
 plugins.withType(JavaPlugin) {
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
@@ -45,7 +56,8 @@ ext.versions = [
         commons_lang3: '3.3.2',
         commons_dbcp2: '2.1',
         hive_jdbc    : '0.13.1-5',
-        hive         : '1.2.0-2',
+        hive3_jdbc    : '3.0.0-qubole',
+        hive         : '3.0.0-2',
         presto       : '0.181',
         reflections  : '0.9.9',
         bytebuddy    : '0.7-rc2',
@@ -85,7 +97,8 @@ ext.libraries = [
         tpchgen              : "io.airlift.tpch:tpch:${versions.tpchgen}",
         tpcdsgen             : "com.teradata.tpcds:tpcds:${versions.tpcdsgen}",
         hive_jdbc            : "com.facebook.presto.hive:hive-apache-jdbc:${versions.hive_jdbc}",
-        hive                 : "com.facebook.presto.hive:hive-apache:${versions.hive}",
+        hive3_jdbc           : "com.qubole.presto.hive:hive3-apache-jdbc:${versions.hive3_jdbc}",
+        hive                 : "io.prestosql.hive:hive-apache:${versions.hive}",
         presto_jdbc          : "com.facebook.presto:presto-jdbc:${versions.presto}",
         reflections          : "org.reflections:reflections:${versions.reflections}",
         bytebuddy            : "net.bytebuddy:byte-buddy:${versions.bytebuddy}",
@@ -113,8 +126,8 @@ ext.tempto_runner = project(':tempto-runner')
 ext.tempto_ldap = project(':tempto-ldap')
 ext.tempto_kafka = project(':tempto-kafka')
 ext.expected_result_generator = project(':expected-result-generator')
-ext.tempto_version = '1.49'
-ext.tempto_group = "io.prestodb.tempto"
+ext.tempto_version = '1.49-hive3-qubole'
+ext.tempto_group = "com.qubole.tempto"
 ext.isReleaseVersion = !tempto_version.endsWith("SNAPSHOT")
 
 ext.nexusUsername = 'setup_nexusUsername_in_gradle.properties'
@@ -124,6 +137,9 @@ ext.skipSigning = false
 task wrapper(type: Wrapper) {
     gradleVersion = '2.3'
 }
+
+version = tempto_version
+group = tempto_group
 
 subprojects {
     // project information
@@ -139,12 +155,15 @@ subprojects {
         header rootProject.file('apache_license_header.txt')
         exclude '**/*.json'
     }
+
+    apply plugin: 'maven-publish'
 }
 
 configure(subprojects - expected_result_generator - tempto_examples) {
     apply plugin: 'signing'
     apply plugin: 'java'
     apply plugin: 'maven'
+    apply plugin: 'maven-publish'
 
     // plugins configuration
     javadoc {
@@ -173,6 +192,8 @@ configure(subprojects - expected_result_generator - tempto_examples) {
     }
 
     // publishing to sonatype
+    // release with ./gradlew release -Prelease.useAutomaticVersion=true -Prelease.releaseVersion=1.49-qubole -Prelease.newVersion=1.50-qubole
+    // Setup password in gradle.properties
     uploadArchives {
         repositories {
             mavenDeployer {
@@ -182,18 +203,18 @@ configure(subprojects - expected_result_generator - tempto_examples) {
                     authentication(userName: nexusUsername, password: nexusPassword)
                 }
 
-                snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+                snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots") {
                     authentication(userName: nexusUsername, password: nexusPassword)
                 }
 
                 pom.project {
                     packaging 'jar'
                     description 'Tempto - test framework'
-                    url 'https://github.com/prestodb/tempto'
+                    url 'https://github.com/qubole/tempto'
                     scm {
-                        url 'git@github.com:prestodb/tempto.git'
-                        connection 'scm:git:git@github.com:prestodb/tempto.git'
-                        developerConnection 'scm:git:git@github.com:prestodb/tempto.git'
+                        url 'git@github.com:qubole/tempto.git'
+                        connection 'scm:git:git@github.com:qubole/tempto.git'
+                        developerConnection 'scm:git:git@github.com:qubole/tempto.git'
                     }
                     licenses {
                         license {
@@ -203,9 +224,9 @@ configure(subprojects - expected_result_generator - tempto_examples) {
                     }
                     developers {
                         developer {
-                            id 'thc'
-                            name 'Teradata Hadoop Center'
-                            email 'EB230060 aat teradata doot com'
+                            id 'presto'
+                            name 'Qubole'
+                            email 'presto@qubole.com'
                         }
                     }
                 }
